@@ -1,16 +1,5 @@
 # image-compression
 
-image-compression/
-├── README.md
-├── requirements.txt
-├── main.py
-├── src/
-|   ├── dct.py
-|   ├── huffman.py
-|   └── metrics.py
-└── data/
-   ├── input/
-   └── output/ 
 
 # To-Do List
 
