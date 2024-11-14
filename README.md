@@ -1,5 +1,6 @@
 # image-compression
 
+Do this - `pip install -r requirements.txt`
 
 # To-Do List
 
