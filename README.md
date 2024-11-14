@@ -1,6 +1,6 @@
 # image-compression
 
-# Tree Structure
+image-compression/
 ├── README.md
 ├── requirements.txt
 ├── main.py
