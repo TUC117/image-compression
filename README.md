@@ -7,10 +7,10 @@ image-compression/
 ├── src/
 |   ├── dct.py
 |   ├── huffman.py
-|   ├── metrics.py
-├── data/
+|   └── metrics.py
+└── data/
    ├── input/
-   ├── output/ 
+   └── output/ 
 
 # To-Do List
 
