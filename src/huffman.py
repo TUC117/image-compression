@@ -2,35 +2,52 @@ import heapq
 from collections import defaultdict
 
 class HuffmanNode:
-    def __init__(self, value=None, freq=0, left=None, right=None):
-        self.value = value
+    def __init__(self, char, freq):
+        self.char = char
         self.freq = freq
-        self.left = left
-        self.right = right
-    
+        self.left = None
+        self.right = None
+
     def __lt__(self, other):
         return self.freq < other.freq
 
-def build_huffman_tree(data):
-    freq_dict = defaultdict(int)
-    for item in data:
-        freq_dict[item] += 1
-    heap = [HuffmanNode(value=k, freq=v) for k, v in freq_dict.items()]
+def build_huffman_tree(frequency):
+    heap = [HuffmanNode(char, freq) for char, freq in frequency.items()]
     heapq.heapify(heap)
     while len(heap) > 1:
-        node1 = heapq.heappop(heap)
-        node2 = heapq.heappop(heap)
-        merged = HuffmanNode(freq=node1.freq + node2.freq, left=node1, right=node2)
+        left = heapq.heappop(heap)
+        right = heapq.heappop(heap)
+        merged = HuffmanNode(None, left.freq + right.freq)
+        merged.left = left
+        merged.right = right
         heapq.heappush(heap, merged)
-    return heap[0]  # root node
+    return heap[0]
 
-def huffman_codes(root):
-    codes = {}
-    def _generate_codes(node, code=""):
-        if node is not None:
-            if node.value is not None:
-                codes[node.value] = code
-            _generate_codes(node.left, code + "0")
-            _generate_codes(node.right, code + "1")
-    _generate_codes(root)
-    return codes
+def generate_codes(node, code="", huffman_codes={}):
+    if node is None:
+        return
+    if node.char is not None:
+        huffman_codes[node.char] = code
+    generate_codes(node.left, code + "0", huffman_codes)
+    generate_codes(node.right, code + "1", huffman_codes)
+    return huffman_codes
+
+def huffman_encode(data):
+    frequency = defaultdict(int)
+    for char in data:
+        frequency[char] += 1
+    root = build_huffman_tree(frequency)
+    huffman_codes = generate_codes(root)
+    encoded_data = ''.join(huffman_codes[char] for char in data)
+    return encoded_data, huffman_codes
+
+def huffman_decode(encoded_data, huffman_codes):
+    reverse_codes = {v: k for k, v in huffman_codes.items()}
+    current_code = ""
+    decoded_data = []
+    for bit in encoded_data:
+        current_code += bit
+        if current_code in reverse_codes:
+            decoded_data.append(reverse_codes[current_code])
+            current_code = ""
+    return decoded_data
