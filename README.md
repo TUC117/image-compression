@@ -13,3 +13,4 @@ Do this - `pip install -r requirements.txt`
 - [x] Calculate RMSE and BPP metrics.
 - [x] Plot RMSE vs. BPP for different quality factors and multiple images.
 - [ ] Solve the error out of index error
+- [ ] Decide which

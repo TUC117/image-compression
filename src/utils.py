@@ -97,7 +97,7 @@ def inverse_zigzag_scan(data, block_size=8):
         else:
             # Odd: traverse diagonally downwards
             for i in range(max(0, sum_idx - h + 1), min(sum_idx + 1, w)):
-                block[sum_idx - i, i] = data[idx]
+                block[sum_idx - i, i] = data[idx] 
                 idx += 1
     return block
 

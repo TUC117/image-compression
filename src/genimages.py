@@ -40,22 +40,15 @@ def plot_main(original_image_path, compressed_images_dir):
             rmse_values.append(rmse)
             
             # Get compressed size in bits
-            compressed_size_bits = len(open(real_path, "rb").read()) * 8
+            # compressed_size_bits = len(open(real_path, "rb").read()) * 8
+            compressed_size_bits = os.path.getsize(real_path) * 8
             bpp = calculate_bpp(compressed_size_bits, width, height)
+            
+            bpp_original = calculate_bpp(os.path.getsize(original_image_path) * 8 , width, height)
+            print(f"Original BPP - {bpp_original}")
             bpp_values.append(bpp)
         else:
             raise NameError(f"mismatchh of format for {compressed_path}")
-    
-    # Plot RMSE vs. BPP for this specific image
-    # plt.figure(figsize=(8, 6))
-    # plt.scatter(bpp_values, rmse_values, c="blue", label="RMSE vs. BPP")
-    # plt.plot(bpp_values, rmse_values, linestyle="--", color="blue")
-    # plt.title(f"RMSE vs. BPP for {image_name.split('.')[0]} Compression")
-    # plt.xlabel("Bits Per Pixel (BPP)")
-    # plt.ylabel("Root Mean Squared Error (RMSE)")
-    # plt.legend()
-    # plt.grid(True)
-    # plt.savefig(os.path.join('plots/', f"{image_name}"))
     
     # Plot RMSE vs. BPP for this specific image
     plt.figure(figsize=(8, 6))

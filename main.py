@@ -41,21 +41,23 @@ if __name__ == "__main__":
             
             # print(image_name, encoded_data_path, compressed_image_path)
             encoder_main(input_image_path=input_image, output_file=encoded_data_path, quality_factor=qf)
-
+            time.sleep(2)
+            
             # print(f'Done Encoding and data stored in {encoded_data_path}')
             decoder_main(input_file=encoded_data_path, output_image_path=compressed_image_path, input_image_path=input_image)
-
+            time.sleep(2)
+            
             # print(f'Done Compression and image stored in {compressed_image_path}')
             original_image = cv2.imread(input_image, cv2.IMREAD_GRAYSCALE)
             compressed_image = cv2.imread(compressed_image_path, cv2.IMREAD_GRAYSCALE)
             
-            input_image_size = original_image.shape[0] * original_image.shape[1]
-            output_image_size = os.path.getsize(encoded_data_path)
+            input_image_size = original_image.shape[0] * original_image.shape[1] 
+            output_image_size = os.path.getsize(encoded_data_path) 
             
             print(f'Input Image size = {input_image_size}')
             print(f'Compressed Image size = {output_image_size}')
             print(f'Compressed to a factor of = {(1 - (output_image_size / input_image_size))*100}%')
-            time.sleep(1)
+            # time.sleep(2)
             
         plot_main(original_image_path=input_image, compressed_images_dir=compressed_images_dir)
     else:
