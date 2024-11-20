@@ -2,6 +2,23 @@ from src.utils import apply_dct_and_quantize, save_to_file, zigzag_scan, run_len
 from src.huffman import huffman_encode
 import cv2
 import numpy as np
+import struct 
+
+def save_to_binary_file(output_file, shape, encoded_data, huffman_codes, quality_factor):
+    # Convert encoded data from binary string to bytes
+    byte_array = int(encoded_data, 2).to_bytes((len(encoded_data) + 7) // 8, byteorder='big')
+
+    # Save to binary file
+    with open(output_file, "wb") as f:
+        # Save shape (height, width), quality factor, and length of encoded data
+        f.write(struct.pack('ii', shape[0], shape[1]))  # Save height and width as integers
+        f.write(struct.pack('i', quality_factor))  # Save quality factor as an integer
+        f.write(struct.pack('i', len(encoded_data)))  # Save the length of the binary string
+        f.write(byte_array)  # Save the encoded binary data
+        # Save Huffman codes as a serialized dictionary
+        huffman_codes_bytes = str(huffman_codes).encode()
+        f.write(struct.pack('i', len(huffman_codes_bytes)))
+        f.write(huffman_codes_bytes)
 
 def scale_quantization_matrix(quant_matrix, quality_factor):
     """
@@ -20,7 +37,17 @@ def encoder_main(input_image_path, output_file, quality_factor):
     # Load the grayscale image
     image = cv2.imread(input_image_path, cv2.IMREAD_GRAYSCALE)
     h, w = image.shape
-    print(f'Input image has shape - {h}, {w}')
+    print(f'Input image has shape - {h}, {w}')  
+    
+    # Calculate padding
+    pad_h = (8 - (h % 8)) % 8  # Padding needed for height
+    pad_w = (8 - (w % 8)) % 8  # Padding needed for width
+    
+    # Pad the image with zeros
+    padded_image = np.pad(image, ((0, pad_h), (0, pad_w)), mode='constant', constant_values=0)
+    h_padded, w_padded = padded_image.shape
+    # print(f'Padded image has shape - {h_padded}, {w_padded}')
+    
     # Define the base quantization matrix
     base_quant_matrix = np.array([
         [16, 11, 10, 16, 24, 40, 51, 61],
@@ -37,12 +64,12 @@ def encoder_main(input_image_path, output_file, quality_factor):
     scaled_quant_matrix = scale_quantization_matrix(base_quant_matrix, quality_factor)
     
     # Apply DCT and quantization
-    quantized_image = apply_dct_and_quantize(image, scaled_quant_matrix)
+    quantized_image = apply_dct_and_quantize(padded_image, scaled_quant_matrix)
     
     # Perform RLE and zigzag
     block_size = 8
-    h_blocks = h // block_size
-    w_blocks = w // block_size
+    h_blocks = h_padded // block_size
+    w_blocks = w_padded // block_size
     encoded_blocks = []
     
     for i in range(h_blocks):
@@ -58,4 +85,4 @@ def encoder_main(input_image_path, output_file, quality_factor):
     encoded_data, huffman_codes = huffman_encode(flat_data)
     
     # Save to file
-    save_to_file(output_file, (h, w), encoded_data, huffman_codes, quality_factor)
+    save_to_binary_file(output_file, (h_padded, w_padded), encoded_data, huffman_codes, quality_factor)
