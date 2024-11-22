@@ -1,6 +1,7 @@
 from src.utils import apply_idct_and_dequantize, load_from_file, inverse_zigzag_scan, run_length_decode,load_from_binary_file
 from src.huffman import huffman_decode
 import cv2
+import json
 import struct
 import numpy as np
 
@@ -22,49 +23,34 @@ def load_from_binary_file(input_file, is_colored):
             huffman_codes = eval(huffman_codes_bytes.decode())
         return shape, encoded_data, huffman_codes, quality_factor
     else:
-        print("I am color")
+        print("COLOR IMAGE PART _ loading")
         with open(input_file, "rb") as f:
             # Read shape (height, width)
             shape = struct.unpack('ii', f.read(8))
-            
             # Read quality factor
             quality_factor = struct.unpack('i', f.read(4))[0]
-            
-            encoded_data_per_channel = []
-            huffman_codes_per_channel = []
+
+            encoded_data = []
+            huffman_codes = []
 
             # Read encoded data and Huffman codes for each channel
-            while True:
-                # Read the length of the encoded data
-                encoded_data_length_bytes = f.read(4)
-                if len(encoded_data_length_bytes) < 4:
-                    break  # End of file or incorrect length, exit loop
+            for _ in range(3):  # Iterate for each channel (R, G, B)
+                # Read the length of the encoded data (in bits)
+                encoded_length = struct.unpack('i', f.read(4))[0]
                 
-                encoded_data_length = struct.unpack('i', encoded_data_length_bytes)[0]
-
-                # Read the encoded data
-                byte_array = f.read((encoded_data_length + 7) // 8)  # Adjust the byte size
-                if len(byte_array) < (encoded_data_length + 7) // 8:
-                    break  # In case the file ends unexpectedly
-
-                encoded_data = bin(int.from_bytes(byte_array, byteorder='big'))[2:].zfill(encoded_data_length)
-                encoded_data_per_channel.append(encoded_data)
+                # Read encoded binary data
+                byte_array = f.read((encoded_length + 7) // 8)
+                channel_encoded_data = bin(int.from_bytes(byte_array, byteorder='big'))[2:].zfill(encoded_length)
+                encoded_data.append(channel_encoded_data)
 
                 # Read Huffman codes
-                huffman_codes_length_bytes = f.read(4)
-                if len(huffman_codes_length_bytes) < 4:
-                    break  # Exit loop if the Huffman length is incorrect
-                
-                huffman_codes_length = struct.unpack('i', huffman_codes_length_bytes)[0]
+                huffman_codes_length = struct.unpack('i', f.read(4))[0]
                 huffman_codes_bytes = f.read(huffman_codes_length)
-                if len(huffman_codes_bytes) < huffman_codes_length:
-                    break  # Exit loop if not enough data for Huffman codes
-                
-                huffman_codes = eval(huffman_codes_bytes.decode('utf-8'))
-                huffman_codes_per_channel.append(huffman_codes)
+                channel_huffman_codes = eval(huffman_codes_bytes.decode())
+                huffman_codes.append(channel_huffman_codes)
 
-        return shape, encoded_data_per_channel, huffman_codes_per_channel, quality_factor
-        
+        return shape, encoded_data, huffman_codes, quality_factor
+
 
 def scale_quantization_matrix(quant_matrix, quality_factor):
     """
@@ -153,9 +139,16 @@ def decoder_main(input_file, output_image_path, input_image_path):
     else:
         print("I am color decoding main")
         shape, encoded_data_per_channel, huffman_codes_per_channel, quality_factor = load_from_binary_file(input_file, is_colored)
-        h, w = shape
+        h_padded, w_padded = shape
         block_size = 8
-
+        
+        print()
+        print("After Loading...")
+        print((h_padded, w_padded))
+        print(len(encoded_data_per_channel), len(encoded_data_per_channel[0]))
+        print(len(huffman_codes_per_channel), len(huffman_codes_per_channel[0]))
+        print(quality_factor)
+        
         reconstructed_channels = []
 
         for encoded_data, huffman_codes in zip(encoded_data_per_channel, huffman_codes_per_channel):
@@ -164,19 +157,14 @@ def decoder_main(input_file, output_image_path, input_image_path):
 
             # RLE and inverse zigzag
             blocks = []
+            block_size = 8
             current_block = []
             for item in decoded_data:
                 if item == (-999,):  # End-of-block marker
                     if current_block:
                         rle_decoded = run_length_decode(current_block)
-                        # Check if RLE decoded data length is not 64
-                        if len(rle_decoded) != 64:
-                            # print(f"Warning: RLE decoded data length is {len(rle_decoded)}, expected 64.")
-                            if len(rle_decoded) > 64:
-                                rle_decoded = rle_decoded[:64]  # Truncate if too long
-                            elif len(rle_decoded) < 64:
-                                rle_decoded.extend([0] * (64 - len(rle_decoded)))  # Pad if too short
-                        
+                        if len(rle_decoded) < 64:  # Pad if necessary
+                            rle_decoded.extend([0] * (64 - len(rle_decoded)))
                         block = inverse_zigzag_scan(rle_decoded, block_size)
                         blocks.append(block)
                         current_block = []
@@ -184,14 +172,15 @@ def decoder_main(input_file, output_image_path, input_image_path):
                     current_block.append(item)
 
             # Reconstruct quantized image
-            quantized_image = np.zeros((h, w), dtype=np.float32)
-            print(h, w, block_size)
+            quantized_image = np.zeros((h_padded, w_padded), dtype=np.float32)
+            print("PRINTINTTTTT")
+            print( len(current_block))
             idx = 0
-            for i in range(0, h, block_size):
+            for i in range(0, h_padded, block_size):
                 # print(len(blocks[idx]))
-                for j in range(0, w, block_size):
-                    if idx < len(blocks):
-                        quantized_image[i:i + block_size, j:j + block_size] = blocks[idx]
+                for j in range(0,   w_padded, block_size):
+                    # if idx < len(blocks):
+                    quantized_image[i:i + block_size, j:j + block_size] = blocks[idx]
                     idx += 1
 
             # Dequantize and apply IDCT
@@ -205,8 +194,9 @@ def decoder_main(input_file, output_image_path, input_image_path):
                 [49, 64, 78, 87, 103, 121, 120, 101],
                 [72, 92, 95, 98, 112, 100, 103, 99],
             ])
-            quant_matrix = base_quant_matrix if len(reconstructed_channels) == 0 else base_quant_matrix * 2
-            reconstructed_channel = apply_idct_and_dequantize(quantized_image, quant_matrix)
+            # quant_matrix = base_quant_matrix if len(reconstructed_channels) == 0 else base_quant_matrix * 2
+            scaled_quant_matrix = scale_quantization_matrix(base_quant_matrix, quality_factor)
+            reconstructed_channel = apply_idct_and_dequantize(quantized_image, scaled_quant_matrix)
             reconstructed_channels.append(reconstructed_channel)
 
         input_image = cv2.imread(input_image_path)
