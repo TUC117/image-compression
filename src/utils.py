@@ -85,21 +85,45 @@ def inverse_zigzag_scan(data, block_size=8):
     """
     Reconstruct a block from zigzag-scanned data.
     """
-    block = np.zeros((block_size, block_size), dtype=np.float32)
-    h, w = block.shape
-    idx = 0
-    for sum_idx in range(h + w - 1):
-        if sum_idx % 2 == 0:
-            # Even: traverse diagonally upwards
-            for i in range(max(0, sum_idx - w + 1), min(sum_idx + 1, h)):
-                block[i, sum_idx - i] = data[idx]
-                idx += 1
-        else:
-            # Odd: traverse diagonally downwards
-            for i in range(max(0, sum_idx - h + 1), min(sum_idx + 1, w)):
-                block[sum_idx - i, i] = data[idx] 
-                idx += 1
-    return block
+    is_color = True
+    if not is_color:
+        block = np.zeros((block_size, block_size), dtype=np.float32)
+        h, w = block.shape
+        idx = 0
+        for sum_idx in range(h + w - 1):
+            if sum_idx % 2 == 0:
+                # Even: traverse diagonally upwards
+                for i in range(max(0, sum_idx - w + 1), min(sum_idx + 1, h)):
+                    block[i, sum_idx - i] = data[idx]
+                    idx += 1
+            else:
+                # Odd: traverse diagonally downwards
+                for i in range(max(0, sum_idx - h + 1), min(sum_idx + 1, w)):
+                    block[sum_idx - i, i] = data[idx] 
+                    idx += 1
+        return block
+    else:
+        block = np.zeros((block_size, block_size), dtype=np.float32)
+        h, w = block.shape
+        idx = 0
+        
+        # Ensure the data has enough elements (it should be block_size * block_size)
+        if len(data) != h * w:
+            raise ValueError(f"Input data length {len(data)} does not match expected block size {h * w}")
+        
+        for sum_idx in range(h + w - 1):
+            if sum_idx % 2 == 0:
+                # Even: traverse diagonally upwards
+                for i in range(max(0, sum_idx - w + 1), min(sum_idx + 1, h)):
+                    block[i, sum_idx - i] = data[idx]
+                    idx += 1
+            else:
+                # Odd: traverse diagonally downwards
+                for i in range(max(0, sum_idx - h + 1), min(sum_idx + 1, w)):
+                    block[sum_idx - i, i] = data[idx]
+                    idx += 1
+
+        return block
 
 def save_to_file(file_path, shape, encoded_data, huffman_codes, quality_factor):
     print(shape)

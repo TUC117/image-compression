@@ -45,7 +45,8 @@ def plot_main(original_image_path, compressed_images_dir):
             bpp = calculate_bpp(compressed_size_bits, width, height)
             
             bpp_original = calculate_bpp(os.path.getsize(original_image_path) * 8 , width, height)
-            print(f"Original BPP - {bpp_original}")
+            # print(f"Original BPP - {bpp_original}")
+            print(rmse, bpp)
             bpp_values.append(bpp)
         else:
             raise NameError(f"mismatchh of format for {compressed_path}")
