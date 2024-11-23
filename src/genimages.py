@@ -23,7 +23,7 @@ def plot_main(original_image_path, compressed_images_dir):
     bpp_values = []
     image_name = original_image_path.split('/')[-1]
     # Process all compressed versions of the specific image
-    compressed_image_paths = sorted(os.listdir(compressed_images_dir))  # Adjust naming pattern if needed
+    compressed_image_paths = os.listdir(compressed_images_dir)  # Adjust naming pattern if needed
     for compressed_path in compressed_image_paths:
         # Read the compressed image
         if compressed_path.endswith('.png'):
@@ -41,7 +41,8 @@ def plot_main(original_image_path, compressed_images_dir):
             
             # Get compressed size in bits
             # compressed_size_bits = len(open(real_path, "rb").read()) * 8
-            compressed_size_bits = os.path.getsize(real_path) * 8
+            compressed_size_bits = os.path.getsize(os.path.join('data/','output/', 'encoded_data',compressed_path.split('.')[0][:-3], compressed_path.split('.')[0]) + '.bin') * 8
+            print(os.path.join('data/','output/', 'encoded_data',compressed_path.split('.')[0][:-3], compressed_path.split('.')[0]) + '.bin')
             bpp = calculate_bpp(compressed_size_bits, width, height)
             
             bpp_original = calculate_bpp(os.path.getsize(original_image_path) * 8 , width, height)
@@ -67,4 +68,4 @@ def plot_main(original_image_path, compressed_images_dir):
     plt.ylabel("Root Mean Squared Error (RMSE)")
     plt.legend(title="Quality Factors", loc="upper right")  # Legend title and position
     plt.grid(True)
-    plt.savefig(os.path.join('plots/', f"{image_name}"))
+    plt.savefig(os.path.join('plots/', f"{image_name.split('.')[0]}.png"))

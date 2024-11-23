@@ -23,7 +23,9 @@ def build_huffman_tree(frequency):
         heapq.heappush(heap, merged)
     return heap[0]
 
-def generate_codes(node, code="", huffman_codes={}):
+def generate_codes(node, code="", huffman_codes=None):
+    if huffman_codes is None:  # Initialize a new dictionary for every call
+        huffman_codes = {}
     if node is None:
         return
     if node.char is not None:
@@ -31,6 +33,7 @@ def generate_codes(node, code="", huffman_codes={}):
     generate_codes(node.left, code + "0", huffman_codes)
     generate_codes(node.right, code + "1", huffman_codes)
     return huffman_codes
+
 
 def huffman_encode(data):
     frequency = defaultdict(int)
