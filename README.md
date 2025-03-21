@@ -12,6 +12,6 @@ Do this - `pip install -r requirements.txt`
 - [x] Implement decompression and image reconstruction.
 - [x] Calculate RMSE and BPP metrics.
 - [x] Plot RMSE vs. BPP for different quality factors and multiple images.
-- [ ] Solve the error out of index error
-- [ ] Update code for color images
-- [ ] Decide which research paper to implement
+- [x] Solve the error out of index error
+- [x] Update code for color images
+- [x] Decide which research paper to implement
