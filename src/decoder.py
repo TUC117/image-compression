@@ -5,6 +5,7 @@ import json
 import struct
 import numpy as np
 
+<<<<<<< HEAD
 def load_from_binary_file(input_file):
     with open(input_file, "rb") as f:
         # Read shape (height, width)
@@ -13,6 +14,15 @@ def load_from_binary_file(input_file):
         # Read quality factor
         quality_factor = struct.unpack('i', f.read(4))[0]
         if is_colored == 0:
+=======
+def load_from_binary_file(input_file, is_colored=False):  
+    if not is_colored:
+        with open(input_file, "rb") as f:
+            # Read shape (height, width)
+            shape = struct.unpack('ii', f.read(8))
+            # Read quality factor
+            quality_factor = struct.unpack('i', f.read(4))[0]
+>>>>>>> b1699b4 (Final Commit)
             # Read length of encoded binary data
             encoded_length = struct.unpack('i', f.read(4))[0]
             # Read encoded binary data
@@ -54,10 +64,20 @@ def scale_quantization_matrix(quant_matrix, quality_factor):
     quality_factor = max(1, min(quality_factor, 100))
     # Compute the scale based on the quality factor
     scale = 50.0 / quality_factor
+<<<<<<< HEAD
+=======
+    # scale = 50.0 / quality_factor
+>>>>>>> b1699b4 (Final Commit)
 
     # Scale the quantization matrix and round values
     scaled_matrix = np.floor((quant_matrix * scale) + 0.5)
 
+<<<<<<< HEAD
+=======
+    # Normalize by subtracting 128
+    # normalized_matrix = scaled_matrix - 128
+
+>>>>>>> b1699b4 (Final Commit)
     # Clip values to ensure a minimum of 1 (adjusted after normalization)
     normalized_matrix = np.clip(scaled_matrix, 1, None)
 
@@ -66,6 +86,7 @@ def scale_quantization_matrix(quant_matrix, quality_factor):
 
 def decoder_main(input_file, output_image_path, input_image_path):
     # Load data from the compressed file
+<<<<<<< HEAD
     is_colored, shape, encoded_data_per_channel, huffman_codes_per_channel, quality_factor = load_from_binary_file(input_file)
     if is_colored == 1:
         print("Image is colored - decoder.py")
@@ -156,6 +177,11 @@ def decoder_main(input_file, output_image_path, input_image_path):
         cv2.imwrite(output_image_path, reconstructed_image)
     else:
         encoded_data, huffman_codes = encoded_data_per_channel, huffman_codes_per_channel
+=======
+    is_colored = False
+    if not is_colored:
+        shape, encoded_data, huffman_codes, quality_factor = load_from_binary_file(input_file, is_colored)
+>>>>>>> b1699b4 (Final Commit)
         h_padded, w_padded = shape  # The padded dimensions saved during encoding
         print(f'I am in decoder shape == {shape}')
         # Huffman decoding
